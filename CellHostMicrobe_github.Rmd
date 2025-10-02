@@ -584,6 +584,496 @@ unique(milkMeta$idbs)
 
 ```
 
+# Fig1B relative abundance
+
+```{r message=FALSE}
+genus_name <- c("Prevotella",  "RC9", "Faecalibacterium", "CAG-83", "Prevotellamassilia", "ER4", "Bacteroides", "C941", "CAG-170", "Succinivibrio", "Dialister", "Agathobacter", "Acetatifactor", "CAG-110", "CAG-279", "Other")
+genus_color <- c("#2986cc", "#cd0000", "#6aa84f",  "#f1c232", "#228585","#f4cccc", "#28E2E5","#e69138", "#cfe2f3", "#d0f679", "#483D8B", "#2F4F4F", "#8B0A50", "#104E8E", "#A6611A",  "gray")
+
+mother_genus <- mother_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+sort_mother_genus <- mother_genus %>%
+  dplyr::count(genus, wt = Abundance) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%
+  pull(genus)
+
+mother_genus$genus_grouped <- ifelse(mother_genus$genus %in% sort_mother_genus, as.character(mother_genus$genus), "Other")
+
+sample_order_genus <- mother_genus %>%
+  group_by(timepoint) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(timepoint)
+
+genus_order <- mother_genus %>%
+  group_by(genus_grouped) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(genus_grouped)
+
+timepoint_order <- c("incl", "tri3", "pn12", "pn56")
+
+mother_genus_plot <- mother_genus %>%
+  mutate(timepoint = factor(timepoint, levels = timepoint_order),
+         genus_grouped = factor(genus_grouped, levels = genus_order)) %>%
+  ggplot(aes(x = timepoint, y = Abundance, fill = genus_grouped)) +
+  geom_bar(stat = 'identity', position = 'fill') +
+  scale_fill_manual(breaks=genus_name, values = genus_color) + 
+  theme(axis.text.x = element_text(angle = 90, size = 8),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(0.3, 'cm'),
+        legend.text = element_text(size = 8)) +
+  labs(x = "", y = "Relative Abundance (%)", fill = "Genus") +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(ncol = 1))
+mother_genus_plot
+
+genus_name <- c("Bifidobacterium", "Escherichia",  "Bacteroides", "Prevotella",  "Veillonella_A", "Klebsiella","Parolsenella", "Campylobacter_D", "Streptococcus", "Parabacteroides", "Phocaeicola",  "Veillonella", "Megasphaera", "Akkermansia", "Sutterella", "Other")
+genus_color <- c( "coral1", "bisque3", "#28E2E5", "#2986cc", "brown", "gold4", "palegreen", "thistle", "slateblue2", "yellow2", "azure4", "forestgreen", "lightblue", "skyblue", "tan2", "gray")
+
+infant_genus <- infant_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+sort_infant_genus <- infant_genus %>%
+  dplyr::count(genus, wt = Abundance) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%
+  pull(genus)
+
+infant_genus$genus_grouped <- ifelse(infant_genus$genus %in% sort_infant_genus, as.character(infant_genus$genus), "Other")
+
+sample_order_genus <- infant_genus %>%
+  group_by(timepoint) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(timepoint)
+
+genus_order <- infant_genus %>%
+  group_by(genus_grouped) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(genus_grouped)
+
+infant_genus_plot <- infant_genus %>%
+  mutate(timepoint = factor(timepoint, levels = sample_order_genus),
+         genus_grouped = factor(genus_grouped, levels = genus_order)) %>%
+  ggplot(aes(x = timepoint, y = Abundance, fill = genus_grouped)) +
+  geom_bar(stat = 'identity', position = 'fill') +
+  scale_fill_manual(breaks=genus_name, values = genus_color) + 
+  theme(axis.text.x = element_text(angle = 90, size = 8),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(0.3, 'cm'),
+        legend.text = element_text(size = 8)) +
+  labs(x = "", y = "Relative Abundance (%)", fill = "Genus") +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(ncol = 1))
+infant_genus_plot
+
+genus_name <- c("Streptococcus", "Staphylococcus", "Corynebacterium",  "Bacillus_A",  "Acinetobacter", "Bifidobacterium_388775", "Veillonella_A", "Rothia", "Priestia", "Unclassified Enterobacteriaceae_A", "Kocuria", "Unclassified Pseudomonadaceae", "Stenotrophomonas_A_615274", "Brevibacillus_D",  "Gemella", "Other")
+genus_color <- c("slateblue2", "orange2", "lavender", "palegreen4", "yellowgreen", "coral1", "brown", "gold4",  "khaki2", "dodgerblue", "hotpink2", "cyan3", "skyblue4", "lemonchiffon3", "plum3", "gray")
+
+
+milk_genus <- milkps_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+sort_milk_genus <- milk_genus %>%
+  dplyr::count(genus, wt = Abundance) %>%
+  arrange(desc(n)) %>%
+  slice_head(n = 10) %>%
+  pull(genus)
+
+milk_genus$genus_grouped <- ifelse(milk_genus$genus %in% sort_milk_genus, as.character(milk_genus$genus), "Other")
+
+sample_order_genus <- milk_genus %>%
+  group_by(timepoint) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(timepoint)
+
+genus_order <- milk_genus %>%
+  group_by(genus_grouped) %>%
+  dplyr::summarize(Abundance = mean(Abundance)) %>%
+  arrange(desc(Abundance)) %>%
+  pull(genus_grouped)
+
+timepoint_order <- c("1421", "pn12", "pn34")
+
+milk_genus_plot <- milk_genus %>%
+  mutate(timepoint = factor(timepoint, levels = timepoint_order),
+         genus_grouped = factor(genus_grouped, levels = genus_order)) %>%
+  ggplot(aes(x = timepoint, y = Abundance, fill = genus_grouped)) +
+  geom_bar(stat = 'identity', position = 'fill') +
+  scale_fill_manual(breaks=genus_name, values = genus_color) + 
+  theme(axis.text.x = element_text(angle = 90, size = 8),
+        legend.title = element_text(size = 8),
+        legend.key.size = unit(0.3, 'cm'),
+        legend.text = element_text(size = 8)) +
+  labs(x = "", y = "Relative Abundance (%)", fill = "Genus") +
+  theme(panel.grid = element_blank(),
+        panel.border = element_blank(),
+        panel.background = element_blank(),
+        axis.ticks.x = element_blank()) +
+  guides(fill = guide_legend(ncol = 1))
+milk_genus_plot
+
+```
+
+# shared bacteria
+
+## Fig1C top pn12
+
+```{r message=FALSE}
+
+pn12e_meta_species <- pn12e_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn12e_species_counts <- pn12e_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn12e",
+                idbs = str_c(idbs, "e")) 
+  
+
+pn12m_meta_species <- pn12m_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn12m_species_counts <- pn12m_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn12m",
+                idbs = str_c(idbs, "m")) 
+  
+
+pn12h_meta_species <- pn12h_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn12h_species_counts <- pn12h_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn12h",
+                idbs = str_c(idbs, "h")) 
+
+shared_pn12epn12m_species <- pn12e_meta_species %>%
+  semi_join(pn12m_meta_species, by = "OTU")
+
+shared_pn12epn12m_species_counts <- shared_pn12epn12m_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn12em",
+                idbs = str_c(idbs, "m")) 
+
+pn12_species_counts <- rbind(pn12h_species_counts, pn12e_species_counts, pn12m_species_counts) %>%
+  mutate(timepoint = factor(timepoint, levels = c("pn12h", "pn12e", "pn12m")))
+
+
+
+pn12SpeciesNumber <- ggplot(pn12_species_counts, aes(x = num_species, fill = factor(timepoint))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Number of Species", y = "Density", fill = "Group", title = "1-2-month gut & milk") +
+  scale_fill_manual(values = c("#2986cc", "#f1c232", "#6aa84f" ), labels = c("Human milk", "Infant gut", "Maternal gut")) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_vline(xintercept = median(pn12h_species_counts$num_species), color = "#2986cc", linetype = "dashed") +
+  geom_vline(xintercept = median(pn12e_species_counts$num_species), color = "#f1c232", linetype = "dashed") +
+  geom_vline(xintercept = median(pn12m_species_counts$num_species), color = "#6aa84f", linetype = "dashed")  
+pn12SpeciesNumber
+
+
+#svglite::svglite(
+#  filename="./gut_milk/pn12SpeciesNumber100.svg",
+#  width=6, height=3
+#  )
+#pn12SpeciesNumber
+#dev.off()
+
+```
+
+
+
+## Fig1C bottom pn34 & pn56
+
+```{r message=FALSE}
+
+pn56e_meta_species <- pn56e_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn56e_species_counts <- pn56e_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn56e",
+                idbs = str_c(idbs, "e")) 
+  
+
+pn56m_meta_species <- pn56m_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn56m_species_counts <- pn56m_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn56m",
+                idbs = str_c(idbs, "m")) 
+  
+
+pn34h_meta_species <- pn34h_meta %>%
+  tax_glom(taxrank = "species") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)
+
+pn34h_species_counts <- pn34h_meta_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn34h",
+                idbs = str_c(idbs, "h")) 
+
+
+shared_pn56epn56m_species <- pn56e_meta_species %>%
+  semi_join(pn56m_meta_species, by = "OTU")
+
+shared_pn56epn56m_species_counts <- shared_pn56epn56m_species %>%
+  dplyr::group_by(idbs) %>%
+  dplyr::summarise(num_species = n_distinct(OTU)) %>%
+  dplyr::mutate(timepoint = "pn56em",
+                idbs = str_c(idbs, "m")) 
+
+pn34pn56_species_counts <- rbind(pn34h_species_counts, pn56e_species_counts, pn56m_species_counts) %>%
+  mutate(timepoint = factor(timepoint, levels = c("pn34h", "pn56e", "pn56m")))
+
+
+pn34pn56SpeciesNumber <- ggplot(pn34pn56_species_counts, aes(x = num_species, fill = factor(timepoint))) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Number of Species", y = "Density", fill = "Group", title = "5-6-month gut & 3-4-month milk") +
+  scale_fill_manual(values = c("#2986cc", "#f1c232", "#6aa84f"), labels = c("Human milk", "Infant gut", "Maternal gut")) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_vline(xintercept = median(pn34h_species_counts$num_species), color = "#2986cc", linetype = "dashed") +
+  geom_vline(xintercept = median(pn56e_species_counts$num_species), color = "#f1c232", linetype = "dashed") +
+  geom_vline(xintercept = median(pn56m_species_counts$num_species), color = "#6aa84f", linetype = "dashed") 
+pn34pn56SpeciesNumber
+
+
+#svglite::svglite(
+#  filename="./gut_milk/pn34pn56SpeciesNumber100.svg",
+#  width=6, height=3
+#  )
+#pn34pn56SpeciesNumber
+#dev.off()
+
+```
+
+
+## Fig1D shared all genus
+
+```{r message=FALSE}
+
+pn12e_meta_genus <- pn12e_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0) %>%
+  dplyr::mutate(timepoint = "pn12e") %>%
+  select(genus, Abundance, idbs, timepoint)
+
+pn56e_meta_genus <- pn56e_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0) %>%
+  dplyr::mutate(timepoint = "pn56e")  %>%
+  select(genus, Abundance, idbs, timepoint)
+
+incl_meta_genus <- incl_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)  %>%
+  dplyr::mutate(timepoint = "incl") %>%
+  select(genus, Abundance, idbs, timepoint)
+
+tri3_meta_genus <- tri3_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)  %>%
+  dplyr::mutate(timepoint = "tri3") %>%
+  select(genus, Abundance, idbs, timepoint)
+
+pn12m_meta_genus <- pn12m_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)  %>%
+  dplyr::mutate(timepoint = "pn12m") %>%
+  select(genus, Abundance, idbs, timepoint)
+
+pn56m_meta_genus <- pn56m_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0)  %>%
+  dplyr::mutate(timepoint = "pn56m") %>%
+  select(genus, Abundance, idbs, timepoint)
+
+
+X1421h_meta_genus <- X1421h_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0) %>%
+  dplyr::mutate(timepoint = "1421h")  %>%
+  select(genus, Abundance, idbs, timepoint) %>%
+  mutate(genus = str_replace(genus, "_\\d{6}$", ""))
+
+pn12h_meta_genus <- pn12h_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0) %>%
+  dplyr::mutate(timepoint = "pn12h") %>%
+  select(genus, Abundance, idbs, timepoint) %>%
+  mutate(genus = str_replace(genus, "_\\d{6}$", ""))
+
+pn34h_meta_genus <- pn34h_meta %>%
+  tax_glom(taxrank = "genus") %>%
+  transform_sample_counts(function(x) x / sum(x)) %>%
+  psmelt() %>%
+  filter(Abundance > 0) %>%
+  dplyr::mutate(timepoint = "pn34h") %>%
+  select(genus, Abundance, idbs, timepoint) %>%
+  mutate(genus = str_replace(genus, "_\\d{6}$", ""))
+
+pn12_genus <- rbind(pn12e_meta_genus, pn12m_meta_genus, pn12h_meta_genus) %>%
+  mutate(timepoint = factor(timepoint, levels = c("pn12h", "pn12e", "pn12m")))
+
+all_genus <- rbind(pn12e_meta_genus, pn56e_meta_genus, incl_meta_genus, tri3_meta_genus, pn12m_meta_genus, pn56m_meta_genus, X1421h_meta_genus, pn12h_meta_genus, pn34h_meta_genus)
+
+# Example dataset 'all_genus'
+# Assuming you have a dataset with columns: genus, Abundance, idbs, timepoint
+
+# Step 1: Reshape the data to create a presence-absence matrix
+genus_timepoint_matrix <- all_genus %>%
+  distinct(genus, timepoint) %>%
+  mutate(presence = 1) %>%
+  spread(key = timepoint, value = presence, fill = 0)
+
+# Step 2: Define the custom order of timepoints and color groups
+custom_timepoint_order <- c("incl", "tri3", "pn12m", "pn56m", "1421h", "pn12h", "pn34h", "pn12e", "pn56e")
+existing_timepoints <- custom_timepoint_order[custom_timepoint_order %in% colnames(genus_timepoint_matrix)]
+
+# Define color groups
+color_group_1 <- c("incl", "tri3", "pn12m", "pn56m")
+color_group_2 <- c("1421h", "pn12h", "pn34h")
+color_group_3 <- c("pn12e", "pn56e")
+
+ 
+# Assign colors to timepoint sets
+set_colors <- c(rep("#6aa84f", length(color_group_1)),  # Color for Group 1
+                rep("#2986cc", length(color_group_2)),   # Color for Group 2
+                rep("#f1c232", length(color_group_3))) # Color for Group 3
+
+# Step 3: Create an UpSet plot with custom set colors
+upset <- upset(genus_timepoint_matrix, 
+      sets = existing_timepoints,  # Use the existing timepoints in custom order
+      keep.order = TRUE, 
+      order.by = "freq", 
+      main.bar.color = "#104E8E", 
+      sets.bar.color = set_colors,
+  nintersects = NA)  
+
+#svglite::svglite(
+#  filename="./gut_milk/sept10-allGenus_allIntersets.svg",
+#  width=10, height=5
+#  )
+#upset
+#dev.off()
+
+
+### venn
+
+library(dplyr)
+library(VennDiagram)
+
+# Step 1: Extract unique genera for each source group
+mother_genera <- unique(c(
+  incl_meta_genus$genus,
+  tri3_meta_genus$genus,
+  pn12m_meta_genus$genus,
+  pn56m_meta_genus$genus
+))
+
+infant_genera <- unique(c(
+  pn12e_meta_genus$genus,
+  pn56e_meta_genus$genus
+))
+
+milk_genera <- unique(c(
+  X1421h_meta_genus$genus,
+  pn12h_meta_genus$genus,
+  pn34h_meta_genus$genus
+))
+
+# Step 2: Create a named list of sets
+venn_list <- list(
+  Mother = mother_genera,
+  Infant = infant_genera,
+  Milk   = milk_genera
+)
+
+# Step 3: Create the Venn plot (no filename, store it as object)
+venn.plot <- venn.diagram(
+  x = venn_list,
+  filename = NULL,  # keep it NULL to store the object
+  col = "black",
+  fill = c("#2986cc", "coral1", "slateblue2"),
+  alpha = 0.7,
+  cex = 1.5,
+  cat.cex = 1.3,
+  cat.pos = 0,
+  cat.dist = 0.05,
+  margin = 0.1
+)
+
+# Step 4: Save to SVG
+#svglite::svglite(filename = "./gut_milk/sept10-allGenus_VENN.svg", width = 5, height #= 5)
+#grid::grid.draw(venn.plot)  # this actually draws the plot
+#dev.off()
+
+```
+
 # Hierarchical clustering
 
 ## Fig2A Infant gut pn12 genera
